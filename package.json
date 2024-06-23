@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=development MONGODB_USER=tuyetanh14102023 MONGODB_PASS=Ist9E5TFXYNevQX CLIENT=http://localhost:3000 ADMIN=http://localhost:3001 JWT_SECRET=mysecret nodemon app.js"
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "ISC",
