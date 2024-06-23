@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
 
 const UserModel = require("../models/User.js");
 const { SEND_MAIL_INFOR } = require("../utils/constants");
@@ -60,7 +61,6 @@ const login = async (req, res) => {
       return res.status(400).json({ errs: errs[0] });
     } else {
       const body = req.body;
-      console.log(body);
       const existingUser = await UserModel.findOne({ email: body.Email });
       if (!existingUser) {
         return res.status(400).json({ msg: "Wrong email or password!" });
@@ -72,9 +72,19 @@ const login = async (req, res) => {
         if (!correctPass) {
           return res.status(400).json({ msg: "Wrong email or password!" });
         } else {
-          // existingUser.pass = undefined;
-          // req.session.user = existingUser;
-          return res.status(400).json({ msg: "You are logged in!" });
+          const token = jwt.sign(
+            { email: existingUser.email },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: "1d",
+            }
+          );
+          res.cookie("user", token, {
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            secure: false,
+          });
+          return res.status(400).json({ msg: "Created!" });
         }
       }
     }
@@ -83,4 +93,29 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const logout = (req, res) => {
+  try {
+    res.clearCookie("user");
+    return res.status(200).json({ msg: "You are logged out!" });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
+const checkLogin = (req, res) => {
+  try {
+    jwt.verify(req.cookies.user, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        res.setHeader("Content-Type", "application/json");
+        res.status(200).json({ msg: "have not been logged in yet" });
+      } else {
+        res.setHeader("Content-Type", "application/json");
+        res.status(200).json({ msg: "You are logged in" });
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
+module.exports = { register, login, logout, checkLogin };

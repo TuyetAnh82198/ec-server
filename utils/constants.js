@@ -10,6 +10,8 @@ const PRODUCT_PATHS = {
 const USER_PATHS = {
   REGISTER: "/register",
   LOGIN: "/login",
+  LOGOUT: "/logout",
+  CHECK_LOGIN: "/check-login",
 };
 
 const SEND_MAIL_INFOR = {

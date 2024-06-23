@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const cookieParse = require("cookie-parser");
 
 const { PATH_BASE } = require("./utils/constants");
 const products = require("./routes/products");
@@ -10,25 +11,30 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParse());
 
-app.use(cors());
+const corsOption = {
+  origin: [process.env.CLIENT, process.env.ADMIN],
+  credentials: true,
+};
+app.use(cors(corsOption));
+
 app.use((req, res, next) => {
   const allowedOrigins = [process.env.CLIENT, process.env.ADMIN];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  // res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-  res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", true);
-  return next();
+  res.setHeader("Access-Control-Allow-Origin", process.env.CLIENT);
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  next();
 });
 
 app.use(PATH_BASE.PRODUCTS, products);
 app.use(PATH_BASE.USER, users);
-// app.use("/users", users);
 // app.use("/cart", cart);
+
 app.use((req, res) => {
   return res.redirect(`${process.env.CLIENT_APP}/123`);
 });
