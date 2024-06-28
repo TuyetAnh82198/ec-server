@@ -8,7 +8,10 @@ const handleValidateErrors = require("../utils/handleValidateErrors");
 
 const register = async (req, res) => {
   try {
-    handleValidateErrors(req);
+    const errs = handleValidateErrors(req);
+    if (errs) {
+      return res.status(200).json({ errs: errs[0] });
+    }
     const body = req.body;
     const existingUser = await UserModel.findOne({ email: body.Email });
     if (existingUser) {
@@ -48,7 +51,10 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    handleValidateErrors(req);
+    const errs = handleValidateErrors(req);
+    if (errs) {
+      return res.status(200).json({ errs: errs[0] });
+    }
     const body = req.body;
     const existingUser = await UserModel.findOne({ email: body.Email });
     if (!existingUser) {
@@ -68,7 +74,7 @@ const login = async (req, res) => {
         res.cookie("user", token, {
           maxAge: 7 * 24 * 60 * 60 * 1000,
           httpOnly: true,
-          secure: true,
+          secure: false,
         });
         return res.status(400).json({ msg: "Created!" });
       }
