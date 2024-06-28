@@ -20,4 +20,30 @@ const SEND_MAIL_INFOR = {
   PASS: "jkal cjew kxwe kmdn",
 };
 
-module.exports = { PATH_BASE, PRODUCT_PATHS, USER_PATHS, SEND_MAIL_INFOR };
+const RESPONSE_MESSAGES = {
+  REGISTER: {
+    SUCCESS: "Created!",
+    USER_EXISTING: "User existing!",
+  },
+  LOGIN: {
+    SUCCESS: "You are logged in",
+    FAIL: "Wrong email or password!",
+    NOT_LOGIN: "have not been logged in yet",
+  },
+  LOGOUT: {
+    SUCCESS: "You are logged out!",
+  },
+};
+
+const USER_INFOR = {
+  COOKIE_NAME: "user",
+};
+
+module.exports = {
+  PATH_BASE,
+  PRODUCT_PATHS,
+  USER_PATHS,
+  SEND_MAIL_INFOR,
+  RESPONSE_MESSAGES,
+  USER_INFOR,
+};

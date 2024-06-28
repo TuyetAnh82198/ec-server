@@ -3,7 +3,11 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 
 const UserModel = require("../models/User.js");
-const { SEND_MAIL_INFOR } = require("../utils/constants");
+const {
+  SEND_MAIL_INFOR,
+  RESPONSE_MESSAGES,
+  USER_INFOR,
+} = require("../utils/constants");
 const handleValidateErrors = require("../utils/handleValidateErrors");
 
 const register = async (req, res) => {
@@ -15,7 +19,9 @@ const register = async (req, res) => {
     const body = req.body;
     const existingUser = await UserModel.findOne({ email: body.Email });
     if (existingUser) {
-      return res.status(400).json({ msg: "User existing!" });
+      return res
+        .status(400)
+        .json({ msg: RESPONSE_MESSAGES.REGISTER.USER_EXISTING });
     } else {
       const newUser = new UserModel({
         email: body.Email,
@@ -42,7 +48,7 @@ const register = async (req, res) => {
                 experience!
               </h5>`,
       });
-      return res.status(201).json({ msg: "Created!" });
+      return res.status(201).json({ msg: RESPONSE_MESSAGES.REGISTER.SUCCESS });
     }
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -58,11 +64,11 @@ const login = async (req, res) => {
     const body = req.body;
     const existingUser = await UserModel.findOne({ email: body.Email });
     if (!existingUser) {
-      return res.status(400).json({ msg: "Wrong email or password!" });
+      return res.status(400).json({ msg: RESPONSE_MESSAGES.LOGIN.FAIL });
     } else {
       const correctPass = bcrypt.compareSync(body.Password, existingUser.pass);
       if (!correctPass) {
-        return res.status(400).json({ msg: "Wrong email or password!" });
+        return res.status(400).json({ msg: RESPONSE_MESSAGES.LOGIN.FAIL });
       } else {
         const token = jwt.sign(
           { email: existingUser.email },
@@ -71,12 +77,16 @@ const login = async (req, res) => {
             expiresIn: "1d",
           }
         );
-        res.cookie("user", token, {
+        res.cookie(USER_INFOR.COOKIE_NAME, token, {
           maxAge: 7 * 24 * 60 * 60 * 1000,
           httpOnly: true,
           secure: false,
         });
-        return res.status(400).json({ msg: "Created!" });
+        return res.status(400).json({
+          msg:
+            RESPONSE_MESSAGES.REGISTER.SUCCESS ||
+            RESPONSE_MESSAGES.LOGIN.SUCCESS,
+        });
       }
     }
   } catch (err) {
@@ -86,8 +96,8 @@ const login = async (req, res) => {
 
 const logout = (req, res) => {
   try {
-    res.clearCookie("user");
-    return res.status(200).json({ msg: "You are logged out!" });
+    res.clearCookie(USER_INFOR.COOKIE_NAME);
+    return res.status(200).json({ msg: RESPONSE_MESSAGES.LOGOUT.SUCCESS });
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
@@ -96,12 +106,15 @@ const logout = (req, res) => {
 const checkLogin = (req, res) => {
   try {
     jwt.verify(req.cookies.user, process.env.JWT_SECRET, (err, decoded) => {
+      const handleSetHeader = () => {
+        return res.setHeader("Content-Type", "application/json");
+      };
       if (err) {
-        res.setHeader("Content-Type", "application/json");
-        res.status(200).json({ msg: "have not been logged in yet" });
+        handleSetHeader();
+        res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
       } else {
-        res.setHeader("Content-Type", "application/json");
-        res.status(200).json({ msg: "You are logged in" });
+        handleSetHeader;
+        res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
       }
     });
   } catch (err) {
