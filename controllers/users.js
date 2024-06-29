@@ -59,7 +59,7 @@ const login = async (req, res) => {
   try {
     const errs = handleValidateErrors(req);
     if (errs) {
-      return res.status(200).json({ errs: errs[0] });
+      return res.status(400).json({ errs: errs[0] });
     }
     const body = req.body;
     const existingUser = await UserModel.findOne({ email: body.Email });
@@ -77,16 +77,23 @@ const login = async (req, res) => {
             expiresIn: "1d",
           }
         );
+        let response = {
+          msg:
+            RESPONSE_MESSAGES.REGISTER.SUCCESS ||
+            RESPONSE_MESSAGES.LOGIN.SUCCESS,
+        };
+        //deployed by a public suffix
+        const isFirefox = req.headers["X-Browser"] === "Firefox";
+        if (!isFirefox) {
+          response = { ...response, noneFirefox: token };
+        }
+        //
         res.cookie(USER_INFOR.COOKIE_NAME, token, {
           maxAge: 7 * 24 * 60 * 60 * 1000,
           httpOnly: true,
           secure: false,
         });
-        return res.status(400).json({
-          msg:
-            RESPONSE_MESSAGES.REGISTER.SUCCESS ||
-            RESPONSE_MESSAGES.LOGIN.SUCCESS,
-        });
+        return res.status(400).json(response);
       }
     }
   } catch (err) {
@@ -105,18 +112,22 @@ const logout = (req, res) => {
 
 const checkLogin = (req, res) => {
   try {
-    jwt.verify(req.cookies.user, process.env.JWT_SECRET, (err, decoded) => {
-      const handleSetHeader = () => {
-        return res.setHeader("Content-Type", "application/json");
-      };
-      if (err) {
-        handleSetHeader();
-        res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
-      } else {
-        handleSetHeader;
-        res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
+    jwt.verify(
+      req.cookies.user || req.body.token,
+      process.env.JWT_SECRET,
+      (err, decoded) => {
+        const handleSetHeader = () => {
+          return res.setHeader("Content-Type", "application/json");
+        };
+        if (err) {
+          handleSetHeader();
+          res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
+        } else {
+          handleSetHeader;
+          res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
+        }
       }
-    });
+    );
   } catch (err) {
     res.status(500).json({ err: err.message });
   }

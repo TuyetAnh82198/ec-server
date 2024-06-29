@@ -22,6 +22,6 @@ const registerValidate = [
 route.post(USER_PATHS.REGISTER, registerValidate, register);
 route.post(USER_PATHS.LOGIN, loginValidate, login);
 route.get(USER_PATHS.LOGOUT, logout);
-route.get(USER_PATHS.CHECK_LOGIN, checkLogin);
+route.post(USER_PATHS.CHECK_LOGIN, checkLogin);
 
 module.exports = route;
