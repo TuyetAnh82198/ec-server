@@ -39,7 +39,7 @@ app.use((req, res) => {
   return res.redirect(`${process.env.CLIENT_APP}/123`);
 });
 
-const mongoose_connect_string = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASS}@cluster0.xtkgj9w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const mongoose_connect_string = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASS}@cluster0.g5ktxjq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 mongoose
   .connect(mongoose_connect_string)
   .then((result) => {
