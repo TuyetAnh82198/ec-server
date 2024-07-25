@@ -9,7 +9,11 @@ const route = express.Router();
 let loginValidate = [];
 let registerValidate = [];
 const handleGgLogin = () => {
-  if (body("Gmail").isEmpty()) {
+  if (
+    !body("Gmail").custom((value) => {
+      return value;
+    })
+  ) {
     loginValidate = [
       body("Email").isEmail().withMessage("Please enter a valid email!"),
       body("Password")
