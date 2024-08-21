@@ -9,5 +9,6 @@ const UserSchema = new Schema({
   phone: { type: String, required: false },
   address: { type: String, required: false },
   role: { type: String, required: true },
+  resetPassToken: { type: String, required: false },
 });
 module.exports = mongoose.model("users", UserSchema);
