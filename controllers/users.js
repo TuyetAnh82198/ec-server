@@ -87,6 +87,9 @@ const login = async (req, res) => {
       }
       return res.status(400).json({ msg: RESPONSE_MESSAGES.LOGIN.FAIL });
     } else {
+      if (gmail) {
+        await handleLoginToken(gmail);
+      }
       const correctPass = bcrypt.compareSync(body.Password, existingUser.pass);
       if (!correctPass) {
         return res.status(400).json({ msg: RESPONSE_MESSAGES.LOGIN.FAIL });
@@ -146,9 +149,34 @@ const forgotPass = async (req, res) => {
     const subject = "Reset your password";
     const html = `Click here to reset your password: ${process.env.CLIENT}/reset-pass/${resetPassToken}`;
     handleMailSending(email, subject, html);
-    return res.status(201).json({ msg: RESPONSE_MESSAGES.FORGOT_PASS.SUCCESS });
+    return res.status(200).json({ msg: RESPONSE_MESSAGES.FORGOT_PASS.SUCCESS });
   }
   return res.status(400).json({ msg: RESPONSE_MESSAGES.FORGOT_PASS.FAIL });
 };
 
-module.exports = { register, login, logout, checkLogin, forgotPass };
+const resetPass = async (req, res) => {
+  try {
+    const errs = handleValidateErrors(req);
+    if (errs) {
+      return res.status(400).json({ errs: errs[0] });
+    }
+    const body = req.body;
+    const token = body.Token;
+    const existingUser = await UserModel.findOne({
+      resetPassToken: token,
+    });
+    if (!existingUser) {
+      return res.status(400).json({ msg: RESPONSE_MESSAGES.RESET_PASS.FAIL });
+    }
+    const newPass = bcrypt.hashSync(body.Pass, 8);
+    await UserModel.updateOne(
+      { resetPassToken: token },
+      { pass: newPass, $unset: { resetPassToken: 1 } }
+    );
+    return res.status(200).json({ msg: RESPONSE_MESSAGES.RESET_PASS.SUCCESS });
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+module.exports = { register, login, logout, checkLogin, forgotPass, resetPass };

@@ -8,27 +8,28 @@ const {
   logout,
   checkLogin,
   forgotPass,
+  resetPass,
 } = require("../controllers/users");
 
 const route = express.Router();
 
-let loginValidate = [];
-let registerValidate = [];
+let loginValidation = [];
+let registerValidation = [];
 const handleGgLogin = () => {
   if (
     !body("Gmail").custom((value) => {
       return value;
     })
   ) {
-    loginValidate = [
+    loginValidation = [
       body("Email").isEmail().withMessage("Please enter a valid email!"),
       body("Password")
         .trim()
         .notEmpty()
         .withMessage("Password cannot be empty!"),
     ];
-    registerValidate = [
-      ...loginValidate,
+    registerValidation = [
+      ...loginValidation,
       body("Password")
         .isLength({ min: 8 })
         .withMessage("Password must be more than 8 characters"),
@@ -45,10 +46,24 @@ const handleGgLogin = () => {
 };
 handleGgLogin();
 
-route.post(USER_PATHS.REGISTER, registerValidate, register);
-route.post(USER_PATHS.LOGIN, loginValidate, login);
+const handleResetPass = () => {
+  return [
+    body("Pass")
+      .isLength({ min: 8 })
+      .withMessage("Password must be more than 8 characters"),
+    body("ConfirmPass")
+      .custom((value, { req }) => {
+        return value === req.body.Pass;
+      })
+      .withMessage("Password and Confirm Password cannot be different"),
+  ];
+};
+
+route.post(USER_PATHS.REGISTER, registerValidation, register);
+route.post(USER_PATHS.LOGIN, loginValidation, login);
 route.get(USER_PATHS.LOGOUT, logout);
 route.post(USER_PATHS.CHECK_LOGIN, checkLogin);
 route.post(USER_PATHS.FORGOT_PASS, forgotPass);
+route.post(USER_PATHS.RESET_PASS, handleResetPass(), resetPass);
 
 module.exports = route;

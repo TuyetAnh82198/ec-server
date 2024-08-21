@@ -13,6 +13,7 @@ const USER_PATHS = {
   LOGOUT: "/logout",
   CHECK_LOGIN: "/check-login",
   FORGOT_PASS: "/forgot-pass",
+  RESET_PASS: "/reset-pass",
 };
 
 const SEND_MAIL_INFOR = {
@@ -37,6 +38,10 @@ const RESPONSE_MESSAGES = {
   FORGOT_PASS: {
     SUCCESS: "Please check your email to reset your password.",
     FAIL: "This user is not registered.",
+  },
+  RESET_PASS: {
+    SUCCESS: "Password reset successful.",
+    FAIL: "Reset pass fail.",
   },
 };
 
