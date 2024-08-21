@@ -9,6 +9,7 @@ const {
   USER_INFOR,
 } = require("../utils/constants");
 const handleValidateErrors = require("../utils/handleValidateErrors");
+const handleErr = require("../utils/handleErr");
 
 const register = async (req, res) => {
   try {
@@ -51,7 +52,7 @@ const register = async (req, res) => {
       return res.status(201).json({ msg: RESPONSE_MESSAGES.REGISTER.SUCCESS });
     }
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    handleErr(res, err);
   }
 };
 
@@ -106,7 +107,7 @@ const login = async (req, res) => {
       }
     }
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    handleErr(res, err);
   }
 };
 
@@ -115,7 +116,7 @@ const logout = (req, res) => {
     res.clearCookie(USER_INFOR.COOKIE_NAME);
     return res.status(200).json({ msg: RESPONSE_MESSAGES.LOGOUT.SUCCESS });
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    handleErr(res, err);
   }
 };
 
@@ -138,8 +139,10 @@ const checkLogin = (req, res) => {
       }
     );
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    handleErr(res, err);
   }
 };
 
-module.exports = { register, login, logout, checkLogin };
+const forgotPass = (req, res) => {};
+
+module.exports = { register, login, logout, checkLogin, forgotPass };
