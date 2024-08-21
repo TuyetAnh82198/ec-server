@@ -2,7 +2,13 @@ const express = require("express");
 const { body } = require("express-validator");
 
 const { USER_PATHS } = require("../utils/constants");
-const { register, login, logout, checkLogin } = require("../controllers/users");
+const {
+  register,
+  login,
+  logout,
+  checkLogin,
+  forgotPass,
+} = require("../controllers/users");
 
 const route = express.Router();
 
@@ -43,5 +49,6 @@ route.post(USER_PATHS.REGISTER, registerValidate, register);
 route.post(USER_PATHS.LOGIN, loginValidate, login);
 route.get(USER_PATHS.LOGOUT, logout);
 route.post(USER_PATHS.CHECK_LOGIN, checkLogin);
+route.post(USER_PATHS.FORGOT_PASS, forgotPass);
 
 module.exports = route;

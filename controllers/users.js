@@ -1,15 +1,12 @@
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const UserModel = require("../models/User.js");
-const {
-  SEND_MAIL_INFOR,
-  RESPONSE_MESSAGES,
-  USER_INFOR,
-} = require("../utils/constants");
+const { RESPONSE_MESSAGES, USER_INFOR } = require("../utils/constants");
 const handleValidateErrors = require("../utils/handleValidateErrors");
 const handleErr = require("../utils/handleErr");
+const handleMailSending = require("../utils/handleMailSending");
 
 const register = async (req, res) => {
   try {
@@ -18,37 +15,28 @@ const register = async (req, res) => {
       return res.status(200).json({ errs: errs[0] });
     }
     const body = req.body;
-    const existingUser = await UserModel.findOne({ email: body.Email });
+    const email = body.Email;
+    const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
       return res
         .status(400)
         .json({ msg: RESPONSE_MESSAGES.REGISTER.USER_EXISTING });
     } else {
       const newUser = new UserModel({
-        email: body.Email,
+        email,
         pass: bcrypt.hashSync(body.Password, 8),
         fullName: body.Fullname,
         phone: body.Phone,
         role: body.role || "client",
       });
       await newUser.save();
-      const transport = nodemailer.createTransport({
-        service: SEND_MAIL_INFOR.SERVICE,
-        auth: {
-          user: SEND_MAIL_INFOR.SENDER,
-          pass: SEND_MAIL_INFOR.PASS,
-        },
-      });
-      await transport.sendMail({
-        from: SEND_MAIL_INFOR.SENDER,
-        to: body.Email,
-        subject: "Sign up successful",
-        html: `<h5>
-                Congratulations! Your account registration was successful. You are
-                now a member of our website. Enjoy a delightful shopping
-                experience!
-              </h5>`,
-      });
+      const subject = "Sign up successful";
+      const html = `<h5>
+      Congratulations! Your account registration was successful. You are
+      now a member of our website. Enjoy a delightful shopping
+      experience!
+    </h5>`;
+      handleMailSending(email, subject, html);
       return res.status(201).json({ msg: RESPONSE_MESSAGES.REGISTER.SUCCESS });
     }
   } catch (err) {
@@ -143,6 +131,24 @@ const checkLogin = (req, res) => {
   }
 };
 
-const forgotPass = (req, res) => {};
+const forgotPass = async (req, res) => {
+  const email = req.body.email;
+  const existingUser = await UserModel.findOne({ email });
+  if (existingUser) {
+    const generateRandomString = (length) => {
+      return crypto
+        .randomBytes(Math.ceil(length / 2))
+        .toString("hex")
+        .slice(0, length);
+    };
+    const resetPassToken = generateRandomString(8);
+    await UserModel.updateOne({ email }, { resetPassToken });
+    const subject = "Reset your password";
+    const html = `Click here to reset your password: ${process.env.CLIENT}/reset-pass/${resetPassToken}`;
+    handleMailSending(email, subject, html);
+    return res.status(201).json({ msg: RESPONSE_MESSAGES.FORGOT_PASS.SUCCESS });
+  }
+  return res.status(400).json({ msg: RESPONSE_MESSAGES.FORGOT_PASS.FAIL });
+};
 
 module.exports = { register, login, logout, checkLogin, forgotPass };

@@ -12,6 +12,7 @@ const USER_PATHS = {
   LOGIN: "/login",
   LOGOUT: "/logout",
   CHECK_LOGIN: "/check-login",
+  FORGOT_PASS: "/forgot-pass",
 };
 
 const SEND_MAIL_INFOR = {
@@ -32,6 +33,10 @@ const RESPONSE_MESSAGES = {
   },
   LOGOUT: {
     SUCCESS: "You are logged out!",
+  },
+  FORGOT_PASS: {
+    SUCCESS: "Please check your email to reset your password.",
+    FAIL: "This user is not registered.",
   },
 };
 
