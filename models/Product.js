@@ -9,7 +9,7 @@ const productSchema = new Schema({
   imgs: [{ type: String, required: true }],
   brand: { type: String, required: true },
   stock: { type: Number, required: true, default: 200 },
-  rank: { type: String, required: false },
+  rank: { type: Number, required: false },
 });
 
 module.exports = mongoose.model("Product", productSchema);
