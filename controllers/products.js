@@ -22,15 +22,16 @@ const getProducts = async (req, res) => {
     const type = req.params.type;
 
     let products = [];
+    let relatedProducts = [];
     switch (type) {
       case "top6":
         products = await ProductModel.find({ rank: { $lte: 6 } }).limit(6);
         break;
       default:
-        break;
+        products = await ProductModel.findOne({ _id: type });
+        relatedProducts = await ProductModel.find({ brand: products.brand });
     }
-
-    return res.status(200).json({ products });
+    return res.status(200).json({ products, relatedProducts });
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
