@@ -19,19 +19,48 @@ const addProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
   try {
-    const type = req.params.type;
-
+    let type = req.params.type;
+    const inc = req.params.inc;
+    const name = req.params.name;
+    const search = {};
+    if (name) {
+      search.name = new RegExp(name, "i");
+    }
     let products = [];
     let relatedProducts = [];
+    let totalPage = 0;
+    const page = req.query.page || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
+    let size = 0;
+    const handleTotalPage = async (search) => {
+      size = await ProductModel.countDocuments(search);
+      return (totalPage = Math.ceil(size / limit));
+    };
     switch (type) {
       case "top6":
-        products = await ProductModel.find({ rank: { $lte: 6 } }).limit(6);
+        products = await ProductModel.find({ rank: { $lte: 6 } }).limit(limit);
+        break;
+      case "all":
+        relatedProducts = await ProductModel.find(search)
+          .sort({ price: inc === "inc" ? 1 : -1 })
+          .skip(skip)
+          .limit(limit);
+        await handleTotalPage(search);
         break;
       default:
-        products = await ProductModel.findOne({ _id: type });
-        relatedProducts = await ProductModel.find({ brand: products.brand });
+        const brand = new RegExp(type, "i");
+        const searchFindOne =
+          type.length < 24 ? { brand: brand } : { _id: type };
+        products = await ProductModel.findOne(searchFindOne);
+        search.brand = products.brand;
+        relatedProducts = await ProductModel.find(search)
+          .sort({ price: inc === "inc" ? 1 : -1 })
+          .skip(skip)
+          .limit(limit);
+        await handleTotalPage(search);
     }
-    return res.status(200).json({ products, relatedProducts });
+    return res.status(200).json({ products, relatedProducts, totalPage });
   } catch (err) {
     res.status(500).json({ err: err.message });
   }

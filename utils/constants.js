@@ -5,7 +5,7 @@ const PATH_BASE = {
 
 const PRODUCT_PATHS = {
   ADD: "/add",
-  GET: "/get/:type",
+  GET: "/get/:type/:page/:inc?/:name?",
 };
 
 const USER_PATHS = {
