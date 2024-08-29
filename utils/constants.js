@@ -1,6 +1,7 @@
 const PATH_BASE = {
   PRODUCTS: "/products",
   USER: "/user",
+  CART: "/cart",
 };
 
 const PRODUCT_PATHS = {
@@ -15,6 +16,10 @@ const USER_PATHS = {
   CHECK_LOGIN: "/check-login",
   FORGOT_PASS: "/forgot-pass",
   RESET_PASS: "/reset-pass",
+};
+
+const CART_PATHS = {
+  ADD: "/add",
 };
 
 const SEND_MAIL_INFOR = {
@@ -32,6 +37,7 @@ const RESPONSE_MESSAGES = {
     SUCCESS: "You are logged in",
     FAIL: "Wrong email or password!",
     NOT_LOGIN: "have not been logged in yet",
+    SESSION_EXPIRED: "Your login session has expired, please log in again",
   },
   LOGOUT: {
     SUCCESS: "You are logged out!",
@@ -54,6 +60,7 @@ module.exports = {
   PATH_BASE,
   PRODUCT_PATHS,
   USER_PATHS,
+  CART_PATHS,
   SEND_MAIL_INFOR,
   RESPONSE_MESSAGES,
   USER_INFOR,

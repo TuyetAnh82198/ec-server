@@ -3,15 +3,19 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParse = require("cookie-parser");
 require("dotenv").config();
-const path = require('path')
+const path = require("path");
 
 const { PATH_BASE } = require("./utils/constants");
 const products = require("./routes/products");
 const users = require("./routes/users");
+const cart = require("./routes/cart");
 
 const app = express();
 
-app.use('/assets/uploads', express.static(path.join(__dirname,'assets/uploads')))
+app.use(
+  "/assets/uploads",
+  express.static(path.join(__dirname, "assets/uploads"))
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParse());
@@ -35,7 +39,7 @@ app.use((req, res, next) => {
 
 app.use(PATH_BASE.PRODUCTS, products);
 app.use(PATH_BASE.USER, users);
-// app.use("/cart", cart);
+app.use(PATH_BASE.CART, cart);
 
 app.use((req, res) => {
   return res.redirect(`${process.env.CLIENT}/123`);

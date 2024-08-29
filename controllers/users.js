@@ -7,6 +7,7 @@ const { RESPONSE_MESSAGES, USER_INFOR } = require("../utils/constants");
 const handleValidateErrors = require("../utils/handleValidateErrors");
 const handleErr = require("../utils/handleErr");
 const handleMailSending = require("../utils/handleMailSending");
+const handleSetHeader = require("../utils/handleSetHeader");
 
 const register = async (req, res) => {
   try {
@@ -117,14 +118,11 @@ const checkLogin = (req, res) => {
       req.cookies.user || req.body.token,
       process.env.JWT_SECRET,
       (err, decoded) => {
-        const handleSetHeader = () => {
-          return res.setHeader("Content-Type", "application/json");
-        };
         if (err) {
           handleSetHeader();
           res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
         } else {
-          handleSetHeader;
+          handleSetHeader();
           res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
         }
       }
