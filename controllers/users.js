@@ -119,10 +119,10 @@ const checkLogin = (req, res) => {
       process.env.JWT_SECRET,
       (err, decoded) => {
         if (err) {
-          handleSetHeader();
+          handleSetHeader(res);
           res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
         } else {
-          handleSetHeader();
+          handleSetHeader(res);
           res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
         }
       }
