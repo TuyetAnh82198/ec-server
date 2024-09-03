@@ -51,8 +51,11 @@ const login = async (req, res) => {
     if (errs) {
       return res.status(400).json({ errs: errs[0] });
     }
-    const handleLoginToken = (email) => {
-      const token = jwt.sign({ email: email }, process.env.JWT_SECRET, {
+    const handleLoginToken = async (email) => {
+      const user = await UserModel.findOne({
+        email,
+      });
+      const token = jwt.sign({ email, _id: user._id }, process.env.JWT_SECRET, {
         expiresIn: "1d",
       });
       let response = {
@@ -85,11 +88,13 @@ const login = async (req, res) => {
         });
         await newUser.save();
         await handleLoginToken(gmail);
+        return;
       }
       return res.status(400).json({ msg: RESPONSE_MESSAGES.LOGIN.FAIL });
     } else {
       if (gmail) {
         await handleLoginToken(gmail);
+        return;
       }
       const correctPass = bcrypt.compareSync(body.Password, existingUser.pass);
       if (!correctPass) {
