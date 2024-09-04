@@ -46,9 +46,18 @@ app.use((req, res) => {
 });
 
 const mongoose_connect_string = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASS}@cluster0.g5ktxjq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const handleHttpServer = (server, port) => {
+  return server.listen(port);
+};
+const handleDisconnect = (socket) => {
+  socket.on("disconnecting", () => {});
+};
 mongoose
   .connect(mongoose_connect_string)
   .then((result) => {
-    app.listen(process.env.PORT || 5000);
+    const io = require("./socket.js").init(
+      handleHttpServer(app, process.env.PORT || 5000)
+    );
+    io.on("connection", (socket) => handleDisconnect());
   })
   .catch((err) => console.log(err));
