@@ -11,7 +11,7 @@ const addProduct = async (req, res) => {
       imgs: req.files.map((file) => file.path),
     });
     await newProduct.save();
-    return res.status(200).json({ message: "Added!" });
+    return res.status(200).json({ msg: "Added!" });
   } catch (err) {
     res.status(500).json({ err: err.message });
   }

@@ -50,12 +50,20 @@ const RESPONSE_MESSAGES = {
     SUCCESS: "Password reset successful.",
     FAIL: "Reset pass fail.",
   },
+  CART: {
+    ADD: "Added!",
+  },
 };
 
 const USER_INFOR = {
   COOKIE_NAME: "user",
 };
 
+const CART_STATUS = {
+  PICKING: "Picking",
+  UNPAID: "Unpaid",
+  PAID: "Paid",
+};
 module.exports = {
   PATH_BASE,
   PRODUCT_PATHS,
@@ -64,4 +72,5 @@ module.exports = {
   SEND_MAIL_INFOR,
   RESPONSE_MESSAGES,
   USER_INFOR,
+  CART_STATUS,
 };
