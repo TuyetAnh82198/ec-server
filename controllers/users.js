@@ -2,12 +2,19 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-const UserModel = require("../models/User.js");
-const { RESPONSE_MESSAGES, USER_INFOR } = require("../utils/constants");
+const UserModel = require("../models/User");
+const CartModel = require("../models/Cart");
+const {
+  RESPONSE_MESSAGES,
+  USER_INFOR,
+  CART_STATUS,
+  SOCKET,
+} = require("../utils/constants");
 const handleValidateErrors = require("../utils/handleValidateErrors");
 const handleErr = require("../utils/handleErr");
 const handleMailSending = require("../utils/handleMailSending");
 const handleSetHeader = require("../utils/handleSetHeader");
+const io = require("../socket");
 
 const register = async (req, res) => {
   try {
@@ -117,8 +124,15 @@ const logout = (req, res) => {
   }
 };
 
-const checkLogin = (req, res) => {
+const checkLogin = async (req, res) => {
   try {
+    const handleCart = async (id) => {
+      const cart = await CartModel.findOne({
+        user: id,
+        status: CART_STATUS.PICKING,
+      });
+      return cart;
+    };
     jwt.verify(
       req.cookies.user || req.body.token,
       process.env.JWT_SECRET,
@@ -127,6 +141,19 @@ const checkLogin = (req, res) => {
           handleSetHeader(res);
           res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
         } else {
+          const user = decoded;
+          CartModel.findOne({
+            user: user._id,
+            status: CART_STATUS.PICKING,
+          })
+            .then((cart) => {
+              io.getIO().emit(SOCKET.CART.TITLE, {
+                action: SOCKET.CART.ADD,
+                cartNumber: cart.products.length,
+              });
+            })
+            .catch((err) => console.log(err));
+
           handleSetHeader(res);
           res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
         }

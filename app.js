@@ -9,6 +9,7 @@ const { PATH_BASE } = require("./utils/constants");
 const products = require("./routes/products");
 const users = require("./routes/users");
 const cart = require("./routes/cart");
+const { SOCKET } = require("./utils/constants");
 
 const app = express();
 
@@ -50,7 +51,7 @@ const handleHttpServer = (server, port) => {
   return server.listen(port);
 };
 const handleDisconnect = (socket) => {
-  socket.on("disconnecting", () => {});
+  socket.on(SOCKET.DISCONNECT, () => {});
 };
 mongoose
   .connect(mongoose_connect_string)
@@ -58,6 +59,8 @@ mongoose
     const io = require("./socket.js").init(
       handleHttpServer(app, process.env.PORT || 5000)
     );
-    io.on("connection", (socket) => handleDisconnect());
+    io.on(SOCKET.CONNECT, (socket) => {
+      handleDisconnect(socket);
+    });
   })
   .catch((err) => console.log(err));

@@ -2,7 +2,12 @@ const jwt = require("jsonwebtoken");
 
 const CartModel = require("../models/Cart");
 const handleErr = require("../utils/handleErr");
-const { CART_STATUS, RESPONSE_MESSAGES } = require("../utils/constants");
+const {
+  CART_STATUS,
+  RESPONSE_MESSAGES,
+  SOCKET,
+} = require("../utils/constants");
+const io = require("../socket");
 
 const handleFindCart = async (id, status) => {
   const cart = await CartModel.findOne({
@@ -61,7 +66,11 @@ const addToCart = async (req, res) => {
       ),
     };
     await CartModel.updateOne({ _id: cart._id }, updateObject);
-    return res.status(200).json({ msg: RESPONSE_MESSAGES.CART.ADD });
+    io.getIO().emit(SOCKET.CART.TITLE, {
+      action: SOCKET.CART.ADD,
+      cartNumber: cart.products.length,
+    });
+    return res.status(201).json({ msg: RESPONSE_MESSAGES.CART.ADD });
   } catch (err) {
     handleErr(res, err);
   }

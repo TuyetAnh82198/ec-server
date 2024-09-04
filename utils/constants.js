@@ -64,6 +64,15 @@ const CART_STATUS = {
   UNPAID: "Unpaid",
   PAID: "Paid",
 };
+
+const SOCKET = {
+  CONNECT: "connection",
+  DISCONNECT: "disconnecting",
+  CART: {
+    TITLE: "cart",
+    ADD: "add",
+  },
+};
 module.exports = {
   PATH_BASE,
   PRODUCT_PATHS,
@@ -73,4 +82,5 @@ module.exports = {
   RESPONSE_MESSAGES,
   USER_INFOR,
   CART_STATUS,
+  SOCKET,
 };
