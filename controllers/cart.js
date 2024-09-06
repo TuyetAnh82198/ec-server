@@ -2,12 +2,8 @@ const jwt = require("jsonwebtoken");
 
 const CartModel = require("../models/Cart");
 const handleErr = require("../utils/handleErr");
-const {
-  CART_STATUS,
-  RESPONSE_MESSAGES,
-  SOCKET,
-} = require("../utils/constants");
-const io = require("../socket");
+const { CART_STATUS, RESPONSE_MESSAGES } = require("../utils/constants");
+const handleSocket = require("../utils/handleSocket");
 
 const handleFindCart = async (id, status, populateOption) => {
   const cart = await CartModel.findOne({
@@ -71,14 +67,8 @@ const addToCart = async (req, res) => {
       ),
     };
     await CartModel.updateOne({ _id: cart._id }, updateObject);
-    io.getIO().emit(SOCKET.CART.TITLE, {
-      action: SOCKET.CART.ADD,
-      cartNumber: cart.products.length,
-    });
-    io.getIO().emit(SOCKET.CART.TITLE, {
-      action: SOCKET.CART.GET,
-      cart,
-    });
+    handleSocket.cartEmit.add(cart);
+    handleSocket.cartEmit.get(cart);
     return res.status(200).json({ msg: RESPONSE_MESSAGES.CART.ADD });
   } catch (err) {
     handleErr(res, err);
@@ -107,4 +97,39 @@ const getCart = async (req, res) => {
   }
 };
 
-module.exports = { addToCart, getCart };
+const deleteCart = async (req, res) => {
+  try {
+    const body = req.body;
+    const token = body.token;
+    const productId = body.productId;
+
+    const cookieUser = req.cookies.user;
+    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
+    const userId = user._id;
+    console.log(productId);
+    await CartModel.findOneAndUpdate(
+      {
+        user: userId,
+        status: CART_STATUS.PICKING,
+      },
+      {
+        $pull: { products: { productId: { $in: productId } } },
+      }
+    );
+
+    const populateOption = "imgs name price stock";
+    const cart = await handleFindCart(
+      userId,
+      CART_STATUS.PICKING,
+      populateOption
+    );
+    console.log(cart);
+    handleSocket.cartEmit.add(cart);
+    handleSocket.cartEmit.get(cart);
+    return res.status(200).json({ msg: RESPONSE_MESSAGES.CART.DELETE });
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+module.exports = { addToCart, getCart, deleteCart };

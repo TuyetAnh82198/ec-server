@@ -21,6 +21,7 @@ const USER_PATHS = {
 const CART_PATHS = {
   ADD: "/add",
   GET: "/get/:type?",
+  DELETE: "/delete",
 };
 
 const SEND_MAIL_INFOR = {
@@ -53,6 +54,7 @@ const RESPONSE_MESSAGES = {
   },
   CART: {
     ADD: "Added!",
+    DELETE: "Deleted!",
   },
 };
 
