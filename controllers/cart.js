@@ -9,11 +9,11 @@ const {
 } = require("../utils/constants");
 const io = require("../socket");
 
-const handleFindCart = async (id, status) => {
+const handleFindCart = async (id, status, populateOption) => {
   const cart = await CartModel.findOne({
     user: id,
     status: status,
-  }).populate("products.productId", "price");
+  }).populate("products.productId", populateOption);
   return cart;
 };
 const addToCart = async (req, res) => {
@@ -27,7 +27,12 @@ const addToCart = async (req, res) => {
     const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
     const userId = user._id;
 
-    let cart = await handleFindCart(userId, CART_STATUS.PICKING);
+    const populateOption = "imgs name price stock";
+    let cart = await handleFindCart(
+      userId,
+      CART_STATUS.PICKING,
+      populateOption
+    );
     let updateObject = {};
     let searchObject = { _id: cart?._id };
     if (!cart) {
@@ -58,7 +63,7 @@ const addToCart = async (req, res) => {
       }
       await CartModel.updateOne(searchObject, updateObject);
     }
-    cart = await handleFindCart(userId, CART_STATUS.PICKING);
+    cart = await handleFindCart(userId, CART_STATUS.PICKING, populateOption);
     updateObject = {
       totalAmount: cart.products.reduce(
         (acc, p) => acc + p.productId.price * p.quan,
@@ -70,10 +75,36 @@ const addToCart = async (req, res) => {
       action: SOCKET.CART.ADD,
       cartNumber: cart.products.length,
     });
-    return res.status(201).json({ msg: RESPONSE_MESSAGES.CART.ADD });
+    io.getIO().emit(SOCKET.CART.TITLE, {
+      action: SOCKET.CART.GET,
+      cart,
+    });
+    return res.status(200).json({ msg: RESPONSE_MESSAGES.CART.ADD });
   } catch (err) {
     handleErr(res, err);
   }
 };
 
-module.exports = { addToCart };
+const getCart = async (req, res) => {
+  try {
+    const type = req.params.type;
+    const body = req.body;
+    const token = body.token;
+
+    const cookieUser = req.cookies.user;
+    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
+    const userId = user._id;
+
+    const populateOption = "imgs name price stock";
+    const cart = await handleFindCart(
+      userId,
+      type ? "" : CART_STATUS.PICKING,
+      populateOption
+    );
+    return res.status(200).json({ cart });
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+module.exports = { addToCart, getCart };

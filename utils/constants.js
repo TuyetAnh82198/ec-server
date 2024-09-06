@@ -20,6 +20,7 @@ const USER_PATHS = {
 
 const CART_PATHS = {
   ADD: "/add",
+  GET: "/get/:type?",
 };
 
 const SEND_MAIL_INFOR = {
@@ -71,6 +72,7 @@ const SOCKET = {
   CART: {
     TITLE: "cart",
     ADD: "add",
+    GET: "get",
   },
 };
 module.exports = {
