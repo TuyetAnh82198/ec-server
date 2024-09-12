@@ -67,6 +67,7 @@ const addToCart = async (req, res) => {
       ),
     };
     await CartModel.updateOne({ _id: cart._id }, updateObject);
+    cart.totalAmount = updateObject.totalAmount;
     handleSocket.cartEmit.add(cart);
     handleSocket.cartEmit.get(cart);
     return res.status(200).json({ msg: RESPONSE_MESSAGES.CART.ADD });
@@ -102,11 +103,12 @@ const deleteCart = async (req, res) => {
     const body = req.body;
     const token = body.token;
     const productId = body.productId;
+    const amount = body.amount;
 
     const cookieUser = req.cookies.user;
     const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
     const userId = user._id;
-    console.log(productId);
+
     await CartModel.findOneAndUpdate(
       {
         user: userId,
@@ -114,6 +116,7 @@ const deleteCart = async (req, res) => {
       },
       {
         $pull: { products: { productId: { $in: productId } } },
+        $inc: { totalAmount: -amount },
       }
     );
 
@@ -123,7 +126,7 @@ const deleteCart = async (req, res) => {
       CART_STATUS.PICKING,
       populateOption
     );
-    console.log(cart);
+
     handleSocket.cartEmit.add(cart);
     handleSocket.cartEmit.get(cart);
     return res.status(200).json({ msg: RESPONSE_MESSAGES.CART.DELETE });
