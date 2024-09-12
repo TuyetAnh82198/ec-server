@@ -126,13 +126,6 @@ const logout = (req, res) => {
 
 const checkLogin = async (req, res) => {
   try {
-    const handleCart = async (id) => {
-      const cart = await CartModel.findOne({
-        user: id,
-        status: CART_STATUS.PICKING,
-      });
-      return cart;
-    };
     jwt.verify(
       req.cookies.user || req.body.token,
       process.env.JWT_SECRET,
@@ -147,10 +140,18 @@ const checkLogin = async (req, res) => {
             status: CART_STATUS.PICKING,
           })
             .then((cart) => {
-              io.getIO().emit(SOCKET.CART.TITLE, {
-                action: SOCKET.CART.ADD,
-                cartNumber: cart.products.length,
-              });
+              io.getIO().emit(
+                SOCKET.CART.TITLE,
+                cart
+                  ? {
+                      action: SOCKET.CART.ADD,
+                      cartNumber: cart.products.length,
+                    }
+                  : {
+                      action: SOCKET.CART.ADD,
+                      cartNumber: 0,
+                    }
+              );
             })
             .catch((err) => console.log(err));
 
