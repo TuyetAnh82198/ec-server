@@ -92,7 +92,7 @@ const getCart = async (req, res) => {
       type ? "" : CART_STATUS.PICKING,
       populateOption
     );
-    return res.status(200).json({ cart });
+    return res.status(200).json({ cart, user });
   } catch (err) {
     handleErr(res, err);
   }

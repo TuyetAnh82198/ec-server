@@ -62,9 +62,19 @@ const login = async (req, res) => {
       const user = await UserModel.findOne({
         email,
       });
-      const token = jwt.sign({ email, _id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
+      const token = jwt.sign(
+        {
+          email,
+          _id: user._id,
+          fullName: user.fullName,
+          phone: user.phone,
+          address: user.address,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1d",
+        }
+      );
       let response = {
         msg:
           RESPONSE_MESSAGES.REGISTER.SUCCESS || RESPONSE_MESSAGES.LOGIN.SUCCESS,
