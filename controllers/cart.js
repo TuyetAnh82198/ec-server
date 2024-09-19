@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const CartModel = require("../models/Cart");
+const UserModel = require("../models/User");
 const handleErr = require("../utils/handleErr");
 const { CART_STATUS, RESPONSE_MESSAGES } = require("../utils/constants");
 const handleSocket = require("../utils/handleSocket");
@@ -135,4 +137,72 @@ const deleteCart = async (req, res) => {
   }
 };
 
-module.exports = { addToCart, getCart, deleteCart };
+const checkout = async (req, res) => {
+  try {
+    const body = req.body;
+    const inputs = req.body.inputs;
+    const token = body.token;
+    const method = req.params.method;
+
+    const cookieUser = req.cookies.user;
+    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
+    const userId = user._id;
+
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        fullName: inputs.FullName,
+        email: inputs.Email,
+        address: inputs.Address,
+        phone: inputs.Phone,
+      }
+    );
+
+    const conditions = {
+      user: userId,
+      status: CART_STATUS.PICKING,
+    };
+
+    const updateObject = {
+      status: CART_STATUS.UNPAID,
+    };
+    let sessionId;
+    if (method === "creditcard") {
+      const cart = await CartModel.findOne(conditions);
+      const totalAmount =
+        cart.totalAmount > 499000 ? cart.totalAmount : cart.totalAmount + 20000;
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "vnd",
+              product_data: {
+                name: `Payment of invoice ${cart._id}`,
+              },
+              unit_amount: totalAmount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${process.env.CLIENT}/payment-success`,
+        cancel_url: `${process.env.CLIENT}/payment-fail`,
+      });
+      updateObject.stripeSessionId = session.id;
+      sessionId = session.id;
+    }
+
+    await CartModel.updateOne(conditions, updateObject);
+    handleSocket.cartEmit.checkout();
+    const responseObject =
+      method === "creditcard"
+        ? { sessionId }
+        : { msg: RESPONSE_MESSAGES.CART.CHECKOUT.UNPAID.WITHOUT_CARD };
+    return res.status(200).json(responseObject);
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+module.exports = { addToCart, getCart, deleteCart, checkout };

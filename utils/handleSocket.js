@@ -15,6 +15,11 @@ const handleSocket = {
         cart,
       });
     },
+    checkout: () => {
+      return io.getIO().emit(SOCKET.CART.TITLE, {
+        action: SOCKET.CART.CHECKOUT,
+      });
+    },
   },
 };
 

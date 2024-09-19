@@ -22,6 +22,7 @@ const CART_PATHS = {
   ADD: "/add",
   GET: "/get/:type?",
   DELETE: "/delete",
+  CHECKOUT: "/checkout/:method?",
 };
 
 const SEND_MAIL_INFOR = {
@@ -55,6 +56,9 @@ const RESPONSE_MESSAGES = {
   CART: {
     ADD: "Added!",
     DELETE: "Deleted!",
+    CHECKOUT: {
+      UNPAID: { WITHOUT_CARD: "Order successful!" },
+    },
   },
 };
 
@@ -75,6 +79,7 @@ const SOCKET = {
     TITLE: "cart",
     ADD: "add",
     GET: "get",
+    CHECKOUT: "checkout",
   },
 };
 module.exports = {
