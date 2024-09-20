@@ -5,7 +5,7 @@ const CartModel = require("../models/Cart");
 const UserModel = require("../models/User");
 const ProductModel = require("../models/Product");
 const handleErr = require("../utils/handleErr");
-const { CART_STATUS, RESPONSE_MESSAGES } = require("../utils/constants");
+const { CART_STATUS, RESPONSE_MESSAGES, ROLE } = require("../utils/constants");
 const handleSocket = require("../utils/handleSocket");
 
 const handleFindCart = async (id, status, populateOption) => {
@@ -16,6 +16,7 @@ const handleFindCart = async (id, status, populateOption) => {
   return cart;
 };
 const handleVerify = (req) => {
+  const token = req.body.token;
   const cookieUser = req.cookies.user;
   const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
   const userId = user._id;
@@ -24,11 +25,10 @@ const handleVerify = (req) => {
 const addToCart = async (req, res) => {
   try {
     const body = req.body;
-    const token = body.token;
     const productId = body.productId;
     const quan = body.quan;
 
-    const { cookieUser, user, userId } = handleVerify(req);
+    const { userId } = handleVerify(req);
 
     const populateOption = "imgs name price stock";
     let cart = await handleFindCart(
@@ -87,9 +87,8 @@ const getCart = async (req, res) => {
   try {
     const type = req.params.type;
     const body = req.body;
-    const token = body.token;
 
-    const { cookieUser, user, userId } = handleVerify(req);
+    const { user, userId } = handleVerify(req);
 
     const populateOption = "imgs name price stock";
     const cart = await handleFindCart(
@@ -106,11 +105,10 @@ const getCart = async (req, res) => {
 const deleteCart = async (req, res) => {
   try {
     const body = req.body;
-    const token = body.token;
     const productId = body.productId;
     const amount = body.amount;
 
-    const { cookieUser, user, userId } = handleVerify(req);
+    const { userId } = handleVerify(req);
 
     await CartModel.findOneAndUpdate(
       {
@@ -142,10 +140,9 @@ const checkout = async (req, res) => {
   try {
     const body = req.body;
     const inputs = req.body.inputs;
-    const token = body.token;
     const method = req.params.method;
 
-    const { cookieUser, user, userId } = handleVerify(req);
+    const { userId } = handleVerify(req);
 
     await UserModel.updateOne(
       { _id: userId },
@@ -208,9 +205,8 @@ const checkout = async (req, res) => {
 const checkPayment = async (req, res) => {
   try {
     const body = req.body;
-    const token = body.token;
 
-    const { cookieUser, user, userId } = handleVerify(req);
+    const { userId } = handleVerify(req);
 
     const conditions = {
       user: userId,
@@ -255,12 +251,15 @@ const checkPayment = async (req, res) => {
 
 const getHistory = async (req, res) => {
   try {
-    const { cookieUser, user, userId } = handleVerify(req);
+    const { user, userId } = handleVerify(req);
 
-    const cart = await CartModel.find({
-      user: userId,
+    let conditions = {
       status: { $ne: CART_STATUS.PICKING },
-    });
+    };
+    if (user.role !== ROLE.ADMIN) {
+      conditions.user = userId;
+    }
+    const cart = await CartModel.find(conditions);
     return res.status(200).json({ cart });
   } catch (err) {
     handleErr(res, err);
