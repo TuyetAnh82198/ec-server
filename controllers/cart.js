@@ -3,6 +3,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const CartModel = require("../models/Cart");
 const UserModel = require("../models/User");
+const ProductModel = require("../models/Product");
 const handleErr = require("../utils/handleErr");
 const { CART_STATUS, RESPONSE_MESSAGES } = require("../utils/constants");
 const handleSocket = require("../utils/handleSocket");
@@ -14,6 +15,12 @@ const handleFindCart = async (id, status, populateOption) => {
   }).populate("products.productId", populateOption);
   return cart;
 };
+const handleVerify = (req) => {
+  const cookieUser = req.cookies.user;
+  const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
+  const userId = user._id;
+  return { cookieUser, user, userId };
+};
 const addToCart = async (req, res) => {
   try {
     const body = req.body;
@@ -21,9 +28,7 @@ const addToCart = async (req, res) => {
     const productId = body.productId;
     const quan = body.quan;
 
-    const cookieUser = req.cookies.user;
-    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
-    const userId = user._id;
+    const { cookieUser, user, userId } = handleVerify(req);
 
     const populateOption = "imgs name price stock";
     let cart = await handleFindCart(
@@ -84,9 +89,7 @@ const getCart = async (req, res) => {
     const body = req.body;
     const token = body.token;
 
-    const cookieUser = req.cookies.user;
-    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
-    const userId = user._id;
+    const { cookieUser, user, userId } = handleVerify(req);
 
     const populateOption = "imgs name price stock";
     const cart = await handleFindCart(
@@ -107,9 +110,7 @@ const deleteCart = async (req, res) => {
     const productId = body.productId;
     const amount = body.amount;
 
-    const cookieUser = req.cookies.user;
-    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
-    const userId = user._id;
+    const { cookieUser, user, userId } = handleVerify(req);
 
     await CartModel.findOneAndUpdate(
       {
@@ -144,9 +145,7 @@ const checkout = async (req, res) => {
     const token = body.token;
     const method = req.params.method;
 
-    const cookieUser = req.cookies.user;
-    const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
-    const userId = user._id;
+    const { cookieUser, user, userId } = handleVerify(req);
 
     await UserModel.updateOne(
       { _id: userId },
@@ -165,6 +164,7 @@ const checkout = async (req, res) => {
 
     const updateObject = {
       status: CART_STATUS.UNPAID,
+      orderDate: new Date(),
     };
     let sessionId;
     if (method === "creditcard") {
@@ -205,4 +205,73 @@ const checkout = async (req, res) => {
   }
 };
 
-module.exports = { addToCart, getCart, deleteCart, checkout };
+const checkPayment = async (req, res) => {
+  try {
+    const body = req.body;
+    const token = body.token;
+
+    const { cookieUser, user, userId } = handleVerify(req);
+
+    const conditions = {
+      user: userId,
+      status: CART_STATUS.UNPAID,
+      stripeSessionId: { $ne: null },
+    };
+    const cart = await CartModel.findOne(conditions);
+    if (cart) {
+      const stripeSessionId = cart.stripeSessionId;
+      const stripeSession = await stripe.checkout.sessions.retrieve(
+        stripeSessionId
+      );
+      if (stripeSession.payment_status === "paid") {
+        await CartModel.updateOne(conditions, {
+          $set: {
+            status: CART_STATUS.PAID,
+            stripeSessionId: null,
+            paymentDate: new Date(),
+          },
+        });
+
+        const updateObject = cart.products.map((pd) => {
+          return {
+            productId: pd.productId,
+            quan: pd.quan,
+          };
+        });
+        const updatePromises = updateObject.map(async (update) => {
+          await ProductModel.updateOne(
+            { _id: update.productId },
+            { $inc: { stock: -update.quan } }
+          );
+        });
+        await Promise.all(updatePromises);
+      }
+    }
+    return;
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+const getHistory = async (req, res) => {
+  try {
+    const { cookieUser, user, userId } = handleVerify(req);
+
+    const cart = await CartModel.find({
+      user: userId,
+      status: { $ne: CART_STATUS.PICKING },
+    });
+    return res.status(200).json({ cart });
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+module.exports = {
+  addToCart,
+  getCart,
+  deleteCart,
+  checkout,
+  checkPayment,
+  getHistory,
+};
