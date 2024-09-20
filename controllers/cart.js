@@ -5,7 +5,11 @@ const CartModel = require("../models/Cart");
 const UserModel = require("../models/User");
 const ProductModel = require("../models/Product");
 const handleErr = require("../utils/handleErr");
-const { CART_STATUS, RESPONSE_MESSAGES, ROLE } = require("../utils/constants");
+const {
+  CART_STATUS,
+  RESPONSE_MESSAGES,
+  USER_INFOR,
+} = require("../utils/constants");
 const handleSocket = require("../utils/handleSocket");
 
 const handleFindCart = async (id, status, populateOption) => {
@@ -86,7 +90,6 @@ const addToCart = async (req, res) => {
 const getCart = async (req, res) => {
   try {
     const type = req.params.type;
-    const body = req.body;
 
     const { user, userId } = handleVerify(req);
 
@@ -204,8 +207,6 @@ const checkout = async (req, res) => {
 
 const checkPayment = async (req, res) => {
   try {
-    const body = req.body;
-
     const { userId } = handleVerify(req);
 
     const conditions = {
@@ -256,10 +257,28 @@ const getHistory = async (req, res) => {
     let conditions = {
       status: { $ne: CART_STATUS.PICKING },
     };
-    if (user.role !== ROLE.ADMIN) {
+    if (user.role !== USER_INFOR.ROLE.ADMIN) {
       conditions.user = userId;
     }
-    const cart = await CartModel.find(conditions);
+    const populateOption = "email fullName address phone";
+    const cart = await CartModel.find(conditions, "-stripeSessionId").populate(
+      "user",
+      populateOption
+    );
+    return res.status(200).json({ cart });
+  } catch (err) {
+    handleErr(res, err);
+  }
+};
+
+const getHistoryDetail = async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const populateModel = "products.productId user";
+    const populateOptions = "-stock -desc -rank -pass -role";
+    const cart = await (
+      await CartModel.findOne({ _id }, "-stripeSessionId")
+    ).populate(populateModel, populateOptions);
     return res.status(200).json({ cart });
   } catch (err) {
     handleErr(res, err);
@@ -273,4 +292,5 @@ module.exports = {
   checkout,
   checkPayment,
   getHistory,
+  getHistoryDetail,
 };

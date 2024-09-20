@@ -8,6 +8,7 @@ const {
   checkout,
   checkPayment,
   getHistory,
+  getHistoryDetail,
 } = require("../controllers/cart");
 const isAuth = require("../middleware/isAuth");
 
@@ -19,5 +20,6 @@ route.post(CART_PATHS.DELETE, isAuth, deleteCart);
 route.post(CART_PATHS.CHECKOUT, isAuth, checkout);
 route.post(CART_PATHS.CHECK_PAYMENT, isAuth, checkPayment);
 route.post(CART_PATHS.HISTORY, isAuth, getHistory);
+route.post(CART_PATHS.HISTORY_DETAIL, isAuth, getHistoryDetail);
 
 module.exports = route;

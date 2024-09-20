@@ -23,6 +23,9 @@ const CART_PATHS = {
   GET: "/get/:type?",
   DELETE: "/delete",
   CHECKOUT: "/checkout/:method?",
+  CHECK_PAYMENT: "/check-payment",
+  HISTORY: "/history",
+  HISTORY_DETAIL: "/history-detail/:id",
 };
 
 const SEND_MAIL_INFOR = {
@@ -64,6 +67,10 @@ const RESPONSE_MESSAGES = {
 
 const USER_INFOR = {
   COOKIE_NAME: "user",
+  ROLE: {
+    ADMIN: "admin",
+    CLIENT: "client",
+  },
 };
 
 const CART_STATUS = {
