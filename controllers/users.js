@@ -69,6 +69,7 @@ const login = async (req, res) => {
           fullName: user.fullName,
           phone: user.phone,
           address: user.address,
+          role: user.role,
         },
         process.env.JWT_SECRET,
         {
