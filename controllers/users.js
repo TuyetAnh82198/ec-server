@@ -15,6 +15,8 @@ const handleErr = require("../utils/handleErr");
 const handleMailSending = require("../utils/handleMailSending");
 const handleSetHeader = require("../utils/handleSetHeader");
 const io = require("../socket");
+const handleVerify = require("../utils/handleVerify");
+const handleIsAdmin = require("../utils/handleIsAdmin");
 
 const register = async (req, res) => {
   try {
@@ -95,9 +97,16 @@ const login = async (req, res) => {
     };
     const body = req.body;
     const gmail = body.Gmail;
-    const existingUser = await UserModel.findOne({
+
+    const isAdminPage = handleIsAdmin.isAdminPage(req);
+    const conditions = {
       email: body.Email || gmail,
-    });
+    };
+    if (isAdminPage) {
+      conditions.role = USER_INFOR.ROLE.ADMIN;
+    }
+
+    const existingUser = await UserModel.findOne(conditions);
     if (!existingUser) {
       if (gmail) {
         const newUser = new UserModel({
@@ -137,40 +146,38 @@ const logout = (req, res) => {
 
 const checkLogin = async (req, res) => {
   try {
-    jwt.verify(
-      req.cookies.user || req.body.token,
-      process.env.JWT_SECRET,
-      (err, decoded) => {
-        if (err) {
-          handleSetHeader(res);
-          res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
-        } else {
-          const user = decoded;
-          CartModel.findOne({
-            user: user._id,
-            status: CART_STATUS.PICKING,
-          })
-            .then((cart) => {
-              io.getIO().emit(
-                SOCKET.CART.TITLE,
-                cart
-                  ? {
-                      action: SOCKET.CART.ADD,
-                      cartNumber: cart.products.length,
-                    }
-                  : {
-                      action: SOCKET.CART.ADD,
-                      cartNumber: 0,
-                    }
-              );
-            })
-            .catch((err) => console.log(err));
+    const { user, userId } = handleVerify(req);
 
-          handleSetHeader(res);
-          res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
-        }
-      }
-    );
+    const isAdminPage = handleIsAdmin.isAdminPage(req);
+    const isAdmin = handleIsAdmin.isAdmin(req);
+
+    if ((isAdminPage && !isAdmin) || !user) {
+      handleSetHeader(res);
+      return res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
+    }
+
+    CartModel.findOne({
+      user: userId,
+      status: CART_STATUS.PICKING,
+    })
+      .then((cart) => {
+        io.getIO().emit(
+          SOCKET.CART.TITLE,
+          cart
+            ? {
+                action: SOCKET.CART.ADD,
+                cartNumber: cart.products.length,
+              }
+            : {
+                action: SOCKET.CART.ADD,
+                cartNumber: 0,
+              }
+        );
+      })
+      .catch((err) => console.log(err));
+
+    handleSetHeader(res);
+    return res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.SUCCESS });
   } catch (err) {
     handleErr(res, err);
   }
