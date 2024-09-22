@@ -13,38 +13,41 @@ const {
 
 const route = express.Router();
 
-let loginValidation = [];
-let registerValidation = [];
-const handleGgLogin = () => {
-  if (
-    !body("Gmail").custom((value) => {
-      return value;
-    })
-  ) {
-    loginValidation = [
+const handleValidation = (type) => {
+  const withoutGmail = !body("Gmail").custom((value) => {
+    return value;
+  });
+  if (!withoutGmail) {
+    const loginValidation = [
       body("Email").isEmail().withMessage("Please enter a valid email!"),
       body("Password")
         .trim()
         .notEmpty()
         .withMessage("Password cannot be empty!"),
     ];
-    registerValidation = [
-      ...loginValidation,
-      body("Password")
-        .isLength({ min: 8 })
-        .withMessage("Password must be more than 8 characters"),
-      body("Fullname")
-        .trim()
-        .notEmpty()
-        .withMessage("Full name cannot be empty!"),
-      body("Phone")
-        .trim()
-        .notEmpty()
-        .withMessage("Phone number cannot be empty!"),
-    ];
+    if (type === "login") {
+      return loginValidation;
+    } else if (type === "register") {
+      const registerValidation = [
+        ...loginValidation,
+        body("Password")
+          .isLength({ min: 8 })
+          .withMessage("Password must be more than 8 characters"),
+        body("Fullname")
+          .trim()
+          .notEmpty()
+          .withMessage("Full name cannot be empty!"),
+        body("Phone")
+          .trim()
+          .notEmpty()
+          .withMessage("Phone number cannot be empty!"),
+      ];
+      return registerValidation;
+    }
+  } else {
+    return [];
   }
 };
-handleGgLogin();
 
 const handleResetPass = () => {
   return [
@@ -59,8 +62,8 @@ const handleResetPass = () => {
   ];
 };
 
-route.post(USER_PATHS.REGISTER, registerValidation, register);
-route.post(USER_PATHS.LOGIN, loginValidation, login);
+route.post(USER_PATHS.REGISTER, handleValidation("register"), register);
+route.post(USER_PATHS.LOGIN, handleValidation("login"), login);
 route.get(USER_PATHS.LOGOUT, logout);
 route.post(USER_PATHS.CHECK_LOGIN, checkLogin);
 route.post(USER_PATHS.FORGOT_PASS, forgotPass);

@@ -21,6 +21,7 @@ const handleIsAdmin = require("../utils/handleIsAdmin");
 const register = async (req, res) => {
   try {
     const errs = handleValidateErrors(req);
+
     if (errs) {
       return res.status(200).json({ errs: errs[0] });
     }
