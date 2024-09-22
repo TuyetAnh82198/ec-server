@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const CartModel = require("../models/Cart");
@@ -11,6 +10,7 @@ const {
   USER_INFOR,
 } = require("../utils/constants");
 const handleSocket = require("../utils/handleSocket");
+const handleVerify = require("../utils/handleVerify");
 
 const handleFindCart = async (id, status, populateOption) => {
   const cart = await CartModel.findOne({
@@ -19,13 +19,7 @@ const handleFindCart = async (id, status, populateOption) => {
   }).populate("products.productId", populateOption);
   return cart;
 };
-const handleVerify = (req) => {
-  const token = req.body.token;
-  const cookieUser = req.cookies.user;
-  const user = jwt.verify(cookieUser || token, process.env.JWT_SECRET);
-  const userId = user._id;
-  return { cookieUser, user, userId };
-};
+
 const addToCart = async (req, res) => {
   try {
     const body = req.body;
