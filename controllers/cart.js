@@ -88,6 +88,37 @@ const getCart = async (req, res) => {
     const { user, userId } = handleVerify(req);
 
     const populateOption = "imgs name price stock";
+
+    if (user.role === USER_INFOR.ROLE.ADMIN) {
+      let adminReqConditions = { status: { $ne: CART_STATUS.PICKING } };
+      const cart = await CartModel.find(adminReqConditions)
+        .sort({ orderDate: -1 })
+        .limit(8)
+        .populate("user", "email");
+
+      const current = new Date();
+      const startOfMonth = new Date(
+        current.getFullYear(),
+        current.getMonth(),
+        1
+      );
+      const endOfMonth = new Date(
+        current.getFullYear(),
+        current.getMonth() + 1,
+        0
+      );
+      adminReqConditions = {
+        ...adminReqConditions,
+        orderDate: {
+          $gte: startOfMonth,
+          $lte: endOfMonth,
+        },
+      };
+      const cartOfMonth = await CartModel.find(adminReqConditions);
+
+      const numberOfUsers = await UserModel.countDocuments();
+      return res.status(200).json({ cart, cartOfMonth, numberOfUsers });
+    }
     const cart = await handleFindCart(
       userId,
       type ? "" : CART_STATUS.PICKING,
