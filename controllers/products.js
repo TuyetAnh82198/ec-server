@@ -29,7 +29,8 @@ const getProducts = async (req, res) => {
     let products = [];
     let relatedProducts = [];
     let totalPage = 0;
-    const page = req.query.page || 1;
+    const page = req.params.page || 1;
+
     const limit = 6;
     const skip = (page - 1) * limit;
     let size = 0;
