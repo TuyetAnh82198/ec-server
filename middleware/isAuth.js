@@ -6,7 +6,7 @@ const { RESPONSE_MESSAGES } = require("../utils/constants");
 const isAuth = (req, res, next) => {
   const cookies = req.cookies.user;
   const token = req.body.token;
-  if (!cookies || !token) {
+  if (!cookies && !token) {
     handleSetHeader(res);
     return res.status(200).json({ msg: RESPONSE_MESSAGES.LOGIN.NOT_LOGIN });
   } else {

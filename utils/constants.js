@@ -7,6 +7,8 @@ const PATH_BASE = {
 const PRODUCT_PATHS = {
   ADD: "/add",
   GET: "/get/:type/:page/:inc?/:name?",
+  DELETE: "/delete",
+  UPDATE: "/update/:id",
 };
 
 const USER_PATHS = {
@@ -88,7 +90,14 @@ const SOCKET = {
     GET: "get",
     CHECKOUT: "checkout",
   },
+  PRODUCTS: {
+    TITLE: "products",
+    DELETE: "delete",
+  },
 };
+
+const LIMIT = 6;
+
 module.exports = {
   PATH_BASE,
   PRODUCT_PATHS,
@@ -99,4 +108,5 @@ module.exports = {
   USER_INFOR,
   CART_STATUS,
   SOCKET,
+  LIMIT,
 };

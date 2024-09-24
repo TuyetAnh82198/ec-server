@@ -21,6 +21,14 @@ const handleSocket = {
       });
     },
   },
+  productEmit: {
+    delete: (products) => {
+      return io.getIO().emit(SOCKET.PRODUCTS.TITLE, {
+        action: SOCKET.PRODUCTS.DELETE,
+        products,
+      });
+    },
+  },
 };
 
 module.exports = handleSocket;

@@ -10,6 +10,7 @@ const productSchema = new Schema({
   brand: { type: String, required: true },
   stock: { type: Number, required: true, default: 200 },
   rank: { type: Number, required: false },
+  isDelete: { type: Boolean, required: false },
 });
 
 module.exports = mongoose.model("Product", productSchema);
