@@ -50,6 +50,21 @@ const mongoose_connect_string = `mongodb+srv://${process.env.MONGODB_USER}:${pro
 const handleHttpServer = (server, port) => {
   return server.listen(port);
 };
+const handleChat = (io, socket) => {
+  socket.on(SOCKET.CHAT.SEND.CREATE_ROOM, (roomId) => {
+    socket.join(roomId);
+    io.emit(SOCKET.CHAT.RECEIVE.ROOM_CREATED, roomId);
+  });
+  socket.on(SOCKET.CHAT.JOIN_ROOM, (roomId) => {
+    socket.join(roomId);
+  });
+  socket.on(SOCKET.CHAT.SEND.EMIT, (data) => {
+    io.to(data.roomId).emit(SOCKET.CHAT.RECEIVE.EMIT.REPLY, data);
+  });
+  socket.on(SOCKET.CHAT.SEND.END_CHAT, (roomId) => {
+    io.to(roomId).emit(SOCKET.CHAT.RECEIVE.EMIT.END_CHAT, roomId);
+  });
+};
 const handleDisconnect = (socket) => {
   socket.on(SOCKET.DISCONNECT, () => {});
 };
@@ -60,6 +75,7 @@ mongoose
       handleHttpServer(app, process.env.PORT || 5000)
     );
     io.on(SOCKET.CONNECT, (socket) => {
+      handleChat(io, socket);
       handleDisconnect(socket);
     });
   })

@@ -94,6 +94,22 @@ const SOCKET = {
     TITLE: "products",
     DELETE: "delete",
   },
+  CHAT: {
+    JOIN_ROOM: "joinRoom",
+    //client SEND, server RECEIVE
+    SEND: {
+      CREATE_ROOM: "createRoom",
+      END_CHAT: "end chat",
+      EMIT: "frontend send messages",
+    },
+    RECEIVE: {
+      ROOM_CREATED: "roomCreated",
+      EMIT: {
+        REPLY: "server send messages",
+        END_CHAT: "server send roomId to end chat",
+      },
+    },
+  },
 };
 
 const LIMIT = 6;
