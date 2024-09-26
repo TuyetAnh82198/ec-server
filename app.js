@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cookieParse = require("cookie-parser");
 require("dotenv").config();
 const path = require("path");
+const compression = require("compression");
 
 const { PATH_BASE } = require("./utils/constants");
 const products = require("./routes/products");
@@ -12,6 +13,7 @@ const cart = require("./routes/cart");
 const { SOCKET } = require("./utils/constants");
 
 const app = express();
+app.use(compression());
 
 app.use(
   "/assets/uploads",
