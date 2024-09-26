@@ -14,39 +14,47 @@ const {
 const route = express.Router();
 
 const handleValidation = (type) => {
-  const withoutGmail = !body("Gmail").custom((value) => {
-    return value;
-  });
-  if (!withoutGmail) {
-    const loginValidation = [
-      body("Email").isEmail().withMessage("Please enter a valid email!"),
+  const loginValidation = [
+    body("Email").isEmail().withMessage("Please enter a valid email!"),
+    body("Password").trim().notEmpty().withMessage("Password cannot be empty!"),
+  ];
+  if (type === "login") {
+    return loginValidation;
+  } else if (type === "register") {
+    const registerValidation = [
+      ...loginValidation,
       body("Password")
+        .isLength({ min: 8 })
+        .withMessage("Password must be more than 8 characters"),
+      body("Fullname")
         .trim()
         .notEmpty()
-        .withMessage("Password cannot be empty!"),
+        .withMessage("Full name cannot be empty!"),
+      body("Phone")
+        .trim()
+        .notEmpty()
+        .withMessage("Phone number cannot be empty!"),
     ];
-    if (type === "login") {
-      return loginValidation;
-    } else if (type === "register") {
-      const registerValidation = [
-        ...loginValidation,
-        body("Password")
-          .isLength({ min: 8 })
-          .withMessage("Password must be more than 8 characters"),
-        body("Fullname")
-          .trim()
-          .notEmpty()
-          .withMessage("Full name cannot be empty!"),
-        body("Phone")
-          .trim()
-          .notEmpty()
-          .withMessage("Phone number cannot be empty!"),
-      ];
-      return registerValidation;
-    }
-  } else {
-    return [];
+    return registerValidation;
   }
+};
+
+const checkGmail = (req) => {
+  return req.body.Gmail;
+};
+const handleLogin = (req, res, next) => {
+  const witGmail = checkGmail(req);
+  if (!witGmail) {
+    handleValidation("login");
+  }
+  next();
+};
+const handleRegister = (req, res, next) => {
+  const witGmail = checkGmail(req);
+  if (!witGmail) {
+    handleValidation("register");
+  }
+  next();
 };
 
 const handleResetPass = () => {
@@ -62,8 +70,8 @@ const handleResetPass = () => {
   ];
 };
 
-route.post(USER_PATHS.REGISTER, handleValidation("register"), register);
-route.post(USER_PATHS.LOGIN, handleValidation("login"), login);
+route.post(USER_PATHS.REGISTER, handleRegister, register);
+route.post(USER_PATHS.LOGIN, handleLogin, login);
 route.get(USER_PATHS.LOGOUT, logout);
 route.post(USER_PATHS.CHECK_LOGIN, checkLogin);
 route.post(USER_PATHS.FORGOT_PASS, forgotPass);
