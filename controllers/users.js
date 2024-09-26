@@ -57,10 +57,14 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const errs = handleValidateErrors(req);
-    if (errs) {
-      return res.status(400).json({ errs: errs[0] });
+    const withoutGmail = !req.body.Gmail;
+    if (withoutGmail) {
+      const errs = handleValidateErrors(req);
+      if (errs) {
+        return res.status(400).json({ errs: errs[0] });
+      }
     }
+
     const handleLoginToken = async (email) => {
       const user = await UserModel.findOne({
         email,

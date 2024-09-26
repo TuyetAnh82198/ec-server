@@ -21,7 +21,7 @@ const handleValidation = (type) => {
   if (type === "login") {
     return loginValidation;
   } else if (type === "register") {
-    const registerValidation = [
+    return [
       ...loginValidation,
       body("Password")
         .isLength({ min: 8 })
@@ -35,26 +35,7 @@ const handleValidation = (type) => {
         .notEmpty()
         .withMessage("Phone number cannot be empty!"),
     ];
-    return registerValidation;
   }
-};
-
-const checkGmail = (req) => {
-  return req.body.Gmail;
-};
-const handleLogin = (req, res, next) => {
-  const witGmail = checkGmail(req);
-  if (!witGmail) {
-    handleValidation("login");
-  }
-  next();
-};
-const handleRegister = (req, res, next) => {
-  const witGmail = checkGmail(req);
-  if (!witGmail) {
-    handleValidation("register");
-  }
-  next();
 };
 
 const handleResetPass = () => {
@@ -70,8 +51,8 @@ const handleResetPass = () => {
   ];
 };
 
-route.post(USER_PATHS.REGISTER, handleRegister, register);
-route.post(USER_PATHS.LOGIN, handleLogin, login);
+route.post(USER_PATHS.REGISTER, handleValidation("register"), register);
+route.post(USER_PATHS.LOGIN, handleValidation("login"), login);
 route.get(USER_PATHS.LOGOUT, logout);
 route.post(USER_PATHS.CHECK_LOGIN, checkLogin);
 route.post(USER_PATHS.FORGOT_PASS, forgotPass);
